@@ -158,6 +158,9 @@ public:
     // parameter list
     static const struct AP_Param::GroupInfo var_info[];
 
+    // set offset and offset type
+    void set_offset(Vector3f offset, int8_t offset_type);
+
 private:
     //==========================================================================
     // Private Helper Functions and Singleton
