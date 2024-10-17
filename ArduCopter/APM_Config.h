@@ -1,5 +1,7 @@
 // User specific config file.  Any items listed in config.h can be overridden here.
 
+#include <AP_Follow/AP_Follow_config.h>
+
 // uncomment the lines below to disable features (flash sizes listed are for APM2 boards and will underestimate savings on Pixhawk and other boards)
 //#define LOGGING_ENABLED       0            // disable logging to save 11K of flash space
 //#define MOUNT                 0            // disable the camera gimbal to save 8K of flash space
@@ -44,3 +46,17 @@
 //#define USERHOOK_SUPERSLOWLOOP userhook_SuperSlowLoop();  // for code to be run at 1hz
 //#define USERHOOK_AUXSWITCH 1                        // for code to handle user aux switches
 //#define USER_PARAMS_ENABLED 1                       // to enable user parameters
+
+// Custom built modes
+#ifndef FIG_INF
+    # define FIG_INF        1
+#endif
+
+// TarLand - Land the vehicle in a moving target
+#ifndef MODE_TARLAND_ENABLED
+#if AP_FOLLOW_ENABLED
+    # define MODE_TARLAND_ENABLED    1
+#else
+     # define MODE_TARLAND_ENABLED    0
+#endif
+#endif

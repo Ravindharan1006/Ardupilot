@@ -2031,6 +2031,71 @@ private:
     bool is_suspended;              // true if zigzag auto is suspended
 };
 
+class ModeTarLand: public  ModeGuided {
+    
+public:
+    // inherit constructor
+    using ModeGuided::Mode;
+    Number mode_number() const override {return Number::TARLAND;};
+
+    bool init(bool ignore_checks) override;
+    void run() override;
+
+    bool requires_GPS() const override { return true; }
+    bool has_manual_throttle() const override { return false; }
+    bool allows_arming(AP_Arming::Method method) const override { return false; };
+    bool is_autopilot() const override { return true; }
+    
+    bool requires_terrain_failsafe() const override { return true; }
+
+    // for reporting to GCS
+    bool get_wp(Location &loc) const override {return false;};
+
+    bool use_pilot_yaw() const override {return true;};
+
+    bool set_speed_xy(float speed_xy_cms) override {return true;};
+    bool set_speed_up(float speed_up_cms) override {return true;};
+    bool set_speed_down(float speed_down_cms) override {return true;};
+
+    void climb_to_alt();
+
+    enum class SubMode: uint8_t {
+        FOLLOW,
+        APPROACH, 
+        DESCENT,
+        FINAL_APPROACH,
+        TOUCHDOWN
+    };
+
+    SubMode state() { return _state; }
+    
+protected:
+
+    const char *name() const override { return "TARLAND"; }
+    const char *name4() const override { return "TLAN"; }
+
+private:
+    
+    SubMode _state = SubMode::FOLLOW;
+    bool _state_complete = false;
+    uint32_t last_log_ms;
+    Vector3f dist_vec;           // vector to target vehicle (Position error)  
+    Vector3f dist_vec_offs;     // vector to target vehicle + offset (Position error with offset)
+    Vector3f target_vel;
+    int8_t offset_type = 1;     // Relative
+    float target_alt_relative;
+    bool landed = false;
+
+
+    void follow();
+
+    void get_desired_vel_neu_cms(Vector3f &desired_vel_neu_cms, Vector3f pos_err_off_neu, Vector3f pos_err, Vector3f pos_err_off);
+    void limit_desired_velocity_xy(Vector3f &desired_vel_neu_cms, Vector3f pos_err_off_neu);
+    void add_feedforward_velocity_xy(Vector3f &desired_vel_xy_cms);
+    void limit_desired_velocity_z(Vector3f &desired_vel_neu_cms, Vector3f pos_err_off_neu);
+    void add_feedforward_velocity_z(Vector3f &desired_vel_neu_cms);
+};
+
 #if MODE_AUTOROTATE_ENABLED
 class ModeAutorotate : public Mode {
 
