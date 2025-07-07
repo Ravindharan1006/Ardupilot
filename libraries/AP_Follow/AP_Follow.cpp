@@ -278,7 +278,7 @@ bool AP_Follow::get_target_dist_and_vel_ned(Vector3f &dist_ned, Vector3f &dist_w
         _estimate_valid = false;
         return;
     }
-        // get target location and velocity
+    // get target location and velocity
     Location target_loc;
     Vector3f veh_vel;
     if (!get_target_location_and_velocity(target_loc, veh_vel)) {
