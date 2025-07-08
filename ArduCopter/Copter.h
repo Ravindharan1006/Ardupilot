@@ -1054,6 +1054,7 @@ private:
 #endif
 #if MODE_FOLLOW_ENABLED
     ModeFollow mode_follow;
+    ModeTarLand mode_tarland;
 #endif
 #if MODE_GUIDED_ENABLED
     ModeGuided mode_guided;
