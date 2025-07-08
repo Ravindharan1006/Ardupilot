@@ -65,7 +65,7 @@ void ModeTarLand::run()
 
 void ModeTarLand::get_target_info()
 {
-    has_target_info = g2.follow.get_target_dist_and_vel_ned(dist_vec, dist_vec_offs, target_vel);
+    has_target_info = g2.follow.get_target_dist_and_vel_NED_m(dist_vec, dist_vec_offs, target_vel);
 }
 
 void ModeTarLand::follow_target()
@@ -84,7 +84,7 @@ void ModeTarLand::follow_target()
     add_feedforward_velocity_z(desired_velocity_neu_cms);
     
     // limit the velocity for obstacle/fence avoidance
-    copter.avoid.adjust_velocity(desired_velocity_neu_cms, pos_control->get_pos_xy_p().kP().get(), pos_control->get_max_accel_xy_cmss(), pos_control->get_pos_z_p().kP().get(), pos_control->get_max_accel_z_cmss(), G_Dt);
+    copter.avoid.adjust_velocity(desired_velocity_neu_cms, pos_control->get_pos_NE_p().kP().get(), pos_control->get_max_accel_NE_cmss(), pos_control->get_pos_U_p().kP().get(), pos_control->get_max_accel_U_cmss(), G_Dt);
 
     ModeTarLand::yaw_behaviour yaw_info = get_yaw_behaviour();
 
@@ -113,10 +113,10 @@ void ModeTarLand::follow_target()
 void ModeTarLand::perform_landing()
 {
     copter.set_land_complete(true);
-    copter.pos_control->set_vel_desired_cms({0,0,0});
+    copter.pos_control->set_vel_desired_NEU_cms({0,0,0});
 
-    copter.pos_control->update_xy_controller();
-    copter.pos_control->update_z_controller();
+    copter.pos_control->update_NE_controller();
+    copter.pos_control->update_U_controller();
 
     if (copter.motors->armed()) {
         motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::GROUND_IDLE);
@@ -156,21 +156,21 @@ void ModeTarLand::limit_desired_velocity_xy(Vector3f &desired_vel_neu_cms, Vecto
     const float dist_to_target_xy = Vector2f(pos_err_off_neu.x, pos_err_off_neu.y).length();
     // apply sqrt controller to limit velocity
     Vector2f desired_vel_xy_cms(desired_vel_neu_cms.x, desired_vel_neu_cms.y);
-    copter.avoid.limit_velocity_2D(pos_control->get_pos_xy_p().kP().get(), pos_control->get_max_accel_xy_cmss() * 0.5f, desired_vel_xy_cms, dir_to_target_xy, dist_to_target_xy, copter.G_Dt);
+    copter.avoid.limit_velocity_2D(pos_control->get_pos_NE_p().kP().get(), pos_control->get_max_accel_NE_cmss() * 0.5f, desired_vel_xy_cms, dir_to_target_xy, dist_to_target_xy, copter.G_Dt);
     desired_vel_neu_cms.xy() = desired_vel_xy_cms;
 }
 
 void ModeTarLand::limit_desired_velocity_z(Vector3f &desired_vel_neu_cms, Vector3f pos_err_off_neu)
 {
     // limit vertical desired_velocity_neu_cms to slow as we approach target (we use 1/2 of maximum deceleration for gentle slow down)
-    const float des_vel_z_max = copter.avoid.get_max_speed(pos_control->get_pos_z_p().kP().get(), pos_control->get_max_accel_z_cmss() * 0.5f, fabsf(pos_err_off_neu.z), copter.G_Dt);
+    const float des_vel_z_max = copter.avoid.get_max_speed(pos_control->get_pos_U_p().kP().get(), pos_control->get_max_accel_U_cmss() * 0.5f, fabsf(pos_err_off_neu.z), copter.G_Dt);
     desired_vel_neu_cms.z = constrain_float(desired_vel_neu_cms.z, -des_vel_z_max, des_vel_z_max);
 }
 
 void ModeTarLand::add_feedforward_velocity_xy(Vector3f &desired_vel_neu_cms)
 {
     desired_vel_neu_cms.xy() += target_vel.xy()*100.0f;
-    desired_vel_neu_cms.xy().limit_length(pos_control->get_max_speed_xy_cms());
+    desired_vel_neu_cms.xy().limit_length(pos_control->get_max_speed_NE_cms());
 }
 
 void ModeTarLand::add_feedforward_velocity_z(Vector3f &desired_vel_neu_cms)
