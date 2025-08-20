@@ -75,6 +75,6 @@ def generate_launch_description() -> LaunchDescription:
         [
             micro_ros_agent,
             sitl,
-            mavproxy,
+            # mavproxy,
         ]
     )
