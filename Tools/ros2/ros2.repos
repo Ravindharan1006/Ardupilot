@@ -1,8 +1,8 @@
 repositories:
   ardupilot:
     type: git
-    url: https://github.com/ArduPilot/ardupilot.git
-    version: master
+    url: https://github.com/Subash-Aer0/ardupilot.git
+    version: subash/tarland
   micro_ros_agent:
     type: git
     url: https://github.com/micro-ROS/micro-ROS-Agent.git
