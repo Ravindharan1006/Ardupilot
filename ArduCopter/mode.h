@@ -2081,7 +2081,7 @@ private:
     Vector3f dist_vec;           // vector to target vehicle (Position error)  
     Vector3f dist_vec_offs;     // vector to target vehicle + offset (Position error with offset)
     Vector3f target_vel;
-    int8_t offset_type = 1;     // Relative
+    int8_t offset_type = 0;     // Not Relative
     float target_alt_relative;
     bool landed = false;
     bool land_initialized = false;
