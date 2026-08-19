@@ -230,6 +230,10 @@ void AP_Follow::set_offset(Vector3f offset, int8_t offset_type)
     _offset_m.set(offset);
 }
 
+Vector3f AP_Follow::get_offset() const
+{
+    return _offset_m.get();
+}
 // // restore offsets to zero if necessary, should be called when vehicle exits follow mode
 // void AP_Follow::clear_offsets_if_required()
 

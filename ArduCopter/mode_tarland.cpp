@@ -41,18 +41,24 @@ void ModeTarLand::run()
         return;
     }
 
-    float dist_xy = dist_vec.xy().length();
+    float dist_xy = dist_vec_offs.xy().length();
 
     if(dist_xy > MIN_FOLLOW_DIST){
 
-        g2.follow.set_offset({0,0,-HOVER_ALT}, offset_type);
+        Vector3f offset = g2.follow.get_offset();
+        offset.z = -HOVER_ALT;
+        g2.follow.set_offset(offset, offset_type);  
+        
         follow_target();
 
     }else if(dist_xy <= MIN_FOLLOW_DIST) {
 
             if(dist_vec.z > MIN_DESCENT_ALT_OFF) {
 
-                g2.follow.set_offset({0,0,-MIN_DESCENT_ALT_OFF}, offset_type);
+                Vector3f offset = g2.follow.get_offset();
+                offset.z = -MIN_DESCENT_ALT_OFF;
+                g2.follow.set_offset(offset, offset_type);
+                
                 follow_target();
 
             } else if(dist_vec.z <= MIN_DESCENT_ALT_OFF) {
@@ -106,7 +112,7 @@ void ModeTarLand::follow_target()
 
     // re-use guided mode's velocity controller (takes NEU)
     ModeGuided::set_velocity(desired_velocity_neu_cms, yaw_info.use_yaw, yaw_info.yaw_cd, false, 0.0f, false, log_request);
-
+    
     ModeGuided::run();
 }
 

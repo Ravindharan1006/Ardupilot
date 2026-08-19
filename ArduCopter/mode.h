@@ -101,7 +101,7 @@ public:
         AUTOROTATE =   26,  // Autonomous autorotation
         AUTO_RTL =     27,  // Auto RTL, this is not a true mode, AUTO will report as this mode if entered to perform a DO_LAND_START Landing sequence
         TURTLE =       28,  // Flip over after crash
-        TARLAND =      29,
+        TARLAND =      29, 
 
         // Mode number 30 reserved for "offboard" for external/lua control.
 

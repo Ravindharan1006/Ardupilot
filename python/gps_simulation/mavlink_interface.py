@@ -323,37 +323,65 @@ class MAVLinkInterface:
         return True
 
     def set_mode(self, mode):
-        """
-        Set vehicle flight mode
 
-        Args:
-            mode (str): Flight mode (e.g., 'GUIDED', 'AUTO', 'STABILIZE')
+        if isinstance(mode, int):
+            mode_id = mode
+        else:
+            if mode not in self.mav_conn.mode_mapping():
+                print(f"Unknown mode: {mode}")
+                return False
 
-        Returns:
-            bool: True if mode change was successful, False otherwise
-        """
-        # Send MAV_CMD_DO_SET_MODE
+            mode_id = self.mav_conn.mode_mapping()[mode]
 
-        # Use MAV_MODE_FLAG constants
-
-        if mode not in self.mav_conn.mode_mapping():
-            print(f"Unknown mode : {mode}")
-            return False
-
-        mode_id = self.mav_conn.mode_mapping()[mode]
         self.mav_conn.set_mode(mode_id)
 
         while True:
+            ack = self.mav_conn.recv_match(
+                type="COMMAND_ACK",
+                blocking=True
+            )
 
-            ack_msg = self.mav_conn.recv_match(type="COMMAND_ACK", blocking=True)
-            ack_msg = ack_msg.to_dict()
-
-            if ack_msg["command"] != mavutil.mavlink.MAV_CMD_DO_SET_MODE:
+            if ack.command != mavutil.mavlink.MAV_CMD_DO_SET_MODE:
                 continue
-            print(mavutil.mavlink.enums["MAV_RESULT"][ack_msg["result"]].description)
+
+            print(
+                mavutil.mavlink.enums["MAV_RESULT"][ack.result].description
+            )
             break
 
         return True
+    # def set_mode(self, mode):
+    #     """
+    #     Set vehicle flight mode
+
+    #     Args:
+    #         mode (str): Flight mode (e.g., 'GUIDED', 'AUTO', 'STABILIZE')
+
+    #     Returns:
+    #         bool: True if mode change was successful, False otherwise
+    #     """
+    #     # Send MAV_CMD_DO_SET_MODE
+
+    #     # Use MAV_MODE_FLAG constants
+
+    #     if mode not in self.mav_conn.mode_mapping():
+    #         print(f"Unknown mode : {mode}")
+    #         return False
+
+    #     mode_id = self.mav_conn.mode_mapping()[mode]
+    #     self.mav_conn.set_mode(mode_id)
+
+    #     while True:
+
+    #         ack_msg = self.mav_conn.recv_match(type="COMMAND_ACK", blocking=True)
+    #         ack_msg = ack_msg.to_dict()
+
+    #         if ack_msg["command"] != mavutil.mavlink.MAV_CMD_DO_SET_MODE:
+    #             continue
+    #         print(mavutil.mavlink.enums["MAV_RESULT"][ack_msg["result"]].description)
+    #         break
+
+    #     return True
 
     def set_local_target_position(self, pos_details, config):
         """
@@ -507,14 +535,14 @@ class MAVLinkInterface:
             0,  # yaw_rate (rotation velocity around the Z-axis)
         )
 
-    def follow_target(self, lat, lon, vx, vy):
+    def follow_target(self, lat, lon, alt, vx, vy):
 
         self.mav_conn.mav.follow_target_send(
             int(time.time() * 1e6),  # timestamp (microseconds, int)
             0b00000011,  # est_capabilities (int)
             int(lat * 1e7),  # lat (degE7, int)
             int(lon * 1e7),  # lon (degE7, int)
-            float(0),  # alt (float)
+            float(alt),  # alt (float)
             [float(vx), float(vy), 0.0],  # vel (float[3])
             [0.0, 0.0, 0.0],  # acc (float[3])
             [0.0, 0.0, 0.0, 0.0],  # attitude_q (float[4])
@@ -580,6 +608,25 @@ class MAVLinkInterface:
         self.mav_conn.mav.send(message)
 
 
+    def get_tarstatus(self):
+        """
+        Receive TARSTATUS MAVLink message
+        """
+
+        msg = self.mav_conn.recv_match(
+            type="TARSTATUS",
+            blocking=True,
+            timeout=0.1
+        )
+
+        if msg is None:
+            return None
+
+        print("TARSTATUS received!")
+        print(msg)
+
+        return msg
+    
 if __name__ == "__main__":
     # Connect to drone
     drone_interface = MAVLinkInterface(

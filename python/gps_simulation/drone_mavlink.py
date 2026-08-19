@@ -121,3 +121,17 @@ class DroneMavlink(MAVLinkInterface):
             65535,
             65535,
         )
+
+    def is_armed(self):
+        hb = self.mav_conn.recv_match(
+            type='HEARTBEAT',
+            blocking=False
+        )
+
+        if hb is None:
+            return True   # No new heartbeat yet
+
+        return bool(
+            hb.base_mode &
+            mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED
+        )

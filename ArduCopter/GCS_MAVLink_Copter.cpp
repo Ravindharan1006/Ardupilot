@@ -1491,6 +1491,9 @@ uint8_t GCS_MAVLINK_Copter::send_available_mode(uint8_t index) const
 #if MODE_FOLLOW_ENABLED
         &copter.mode_follow,
 #endif
+#if MODE_TARLAND_ENABLED
+        &copter.mode_tarland,
+#endif
 #if MODE_ZIGZAG_ENABLED
         &copter.mode_zigzag,
 #endif

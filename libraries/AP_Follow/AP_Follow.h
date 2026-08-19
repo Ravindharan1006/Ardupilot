@@ -160,6 +160,7 @@ public:
 
     // set offset and offset type
     void set_offset(Vector3f offset, int8_t offset_type);
+    Vector3f get_offset() const;
 
 private:
     //==========================================================================
