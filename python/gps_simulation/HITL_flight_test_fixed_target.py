@@ -6,45 +6,62 @@ import csv
 from datetime import datetime
 
 print("connecting....")
-drone_connection = mavutil.mavlink_connection("/dev/ttyUSB0",baud=57600)
-target_connection = mavutil.mavlink_connection("/dev/ttyUSB1",baud=57600)
-
-# Drone GPS Position
-if drone_connection:
-    drone_home_gps = drone_connection.get_gps_position()
-    drone_home_lat = drone_home_gps["lat"]
-    drone_home_lon = drone_home_gps["lon"]
-    drone_home_alt = drone_home_gps["alt"]
-    drone_home_relative_alt = drone_home_gps["relative_alt"]
-    drone_home_Vx = drone_home_gps["vx"]
-    drone_home_Vy = drone_home_gps["vy"]
-    drone_home_Vz = drone_home_gps["vz"]
-
-else:
-    print("No target GPS data received.")
-
-print(f"drone_Lat: {drone_home_lat}, drone_lon: {drone_home_lon}, drone_Alt: {drone_home_alt}, drone_Relative Alt: {drone_home_relative_alt}, drone_Vx: {drone_home_Vx}, drone_Vy: {drone_home_Vy}, drone_Vz: {drone_home_Vz}")
+drone_connection = DroneMavlink(connection_string="udp:127.0.0.1:14550")
+target_connection = DroneMavlink(connection_string="udp:127.0.0.1:14560")
 
 #delaying
 time.sleep(2)
 
-# Target GPS Position
-if target_connection:
-    target_gps = drone_connection.get_gps_position()
-    target_lat = target_gps["lat"]
-    target_lon = target_gps["lon"]
-    target_alt = target_gps["alt"]
-    target_relative_alt = target_gps["relative_alt"]
-    target_Vx = target_gps["vx"] + 0.707
-    target_Vy = target_gps["vy"] + 0.707
-    target_Vz = target_gps["vz"]
+# Drone GPS Position
+drone_home_gps = drone_connection.get_gps_position()
+drone_home_lat = drone_home_gps["lat"]
+drone_home_lon = drone_home_gps["lon"]
+drone_home_alt = drone_home_gps["alt"]
+drone_home_relative_alt = drone_home_gps["relative_alt"]
+drone_home_Vx = drone_home_gps["vx"]
+drone_home_Vy = drone_home_gps["vy"]
+drone_home_Vz = drone_home_gps["vz"]
+print(f"drone_Lat: {drone_home_lat}, drone_lon: {drone_home_lon}, drone_Alt: {drone_home_alt}, drone_Relative Alt: {drone_home_relative_alt}, drone_Vx: {drone_home_Vx}, drone_Vy: {drone_home_Vy}, drone_Vz: {drone_home_Vz}")
 
-else:
-    print("No target GPS data received.")
+
+# Target GPS Position
+# target_gps = drone_connection.get_gps_position()
+# target_lat = target_gps["lat"]
+# target_lon = target_gps["lon"]
+# target_alt = target_gps["alt"]
+# target_relative_alt = target_gps["relative_alt"]
+# target_Vx = target_gps["vx"]
+# target_Vy = target_gps["vy"]
+# target_Vz = target_gps["vz"]
+
+# Set initial target position
+offset_north = 60      # meters
+offset_east  = -60     # meters
+offset_distance = math.sqrt(offset_north**2 + offset_east**2)   # shouldn't be more than 100 meters
+print("Target offset distance = %.2f m" % offset_distance)
+
+# Target location
+target_lat = drone_home_lat + offset_north / 111111.0
+target_lon = drone_home_lon + offset_east / (111111.0 * math.cos(math.radians(drone_home_lat)))
+target_alt = drone_home_alt 
+target_relative_alt = drone_home_relative_alt
+target_Vx = drone_home_Vx + 0     # North (m/s)
+target_Vy = drone_home_Vy + 0     # East (m/s)
+target_Vz = drone_home_Vz + 0
 
 print(f"target_Lat: {target_lat}, target_lon: {target_lon}, target_Alt: {target_alt}, target_Relative Alt: {target_relative_alt}, target_Vx: {target_Vx}, target_Vy: {target_Vy}, target_Vz: {target_Vz}")
 
+target_location = {
+    "lat": target_lat,
+    "lon": target_lon,
+    "alt": target_alt,
+    "vx": target_Vx,
+    "vy": target_Vy,
+    "vz": target_Vz
+}
 dt = 0.1    # time step in seconds
+
+print("Sending Target Coordinates...")
 
 # Lists for NED coordinates
 drone_north_log = []
@@ -57,7 +74,7 @@ target_east_log  = []
 # Create Flight Log File
 # ============================
 
-filename = datetime.now().strftime("Flight_test_fixed_GPS_target_Log_%d/%m/%Y_%H:%M:%S.csv")
+filename = datetime.now().strftime("HITL_flight_test_fixed_target_Log_%d%m%Y_%H%M%S.csv")
 
 log_file = open(filename, mode="w", newline="")
 writer = csv.writer(log_file)
@@ -97,25 +114,7 @@ print(f"Logging flight data to: {filename}")
 
 
 while True:
-        
-   
-    # distance travelled in this time step
-    north = target_Vx * dt
-    east  = target_Vy * dt
-
-    target_lat += north / 111111.0     # north
-    target_lon += east  / (111111.0 * math.cos(math.radians(target_lat)))    # east
     
-    print(f"Target Lat: {target_lat}, Target Lon: {target_lon}, Target Alt: {target_alt}, Target Relative Alt: {target_relative_alt}, Target Vx: {target_vx}, Target Vy: {target_vy}, Target Vz: {target_vz}, Target Hdg: {target_hdg}")
-    
-    # Convert target GPS coordinates to NED coordinates relative to the drone's home position
-    target_north = (target_lat - drone_home_lat) * 111111.0
-    target_east = (target_lon - drone_home_lon) * 111111.0 * math.cos(math.radians(drone_home_lat))
-
-    # Store target position in NED coordinates
-    target_north_log.append(target_north)
-    target_east_log.append(target_east)
-
     # Drone's current GPS position
     drone_gps = drone_connection.get_gps_position()    
     drone_lat = drone_gps["lat"]
@@ -136,7 +135,19 @@ while True:
     drone_north_log.append(drone_north)
     drone_east_log.append(drone_east)
 
-    
+    # Sending target location
+    target_connection.set_gps_target(target_location)
+
+    print(f"target_Lat: {target_lat}, target_lon: {target_lon}, target_Alt: {target_alt}, target_Relative Alt: {target_relative_alt}, target_Vx: {target_Vx}, target_Vy: {target_Vy}, target_Vz: {target_Vz}")
+
+    # Convert target GPS coordinates to NED coordinates relative to the drone's home position
+    target_north = (target_lat - drone_home_lat) * 111111.0
+    target_east = (target_lon - drone_home_lon) * 111111.0 * math.cos(math.radians(drone_home_lat))
+
+    # Store target position in NED coordinates
+    target_north_log.append(target_north)
+    target_east_log.append(target_east)
+
     # calculating distance to target (Error)
     dlat = target_lat - drone_lat
     dlon = target_lon - drone_lon
@@ -149,17 +160,18 @@ while True:
         target_lon,
         target_alt,
         target_Vx,
-        target_Vy,
+        target_Vy,         
     )
 
     # # Failsafe command
     # if distance > 100:
-    #     connection.set_mode('RTL')
+    #     drone_connection.set_mode('RTL')
     #     break
 
-    if not drone_connection.is_armed():
-        print("Vehicle is disarmed. Exiting loop.")  
-        break
+    # if not drone_connection.is_armed():
+    #     print("Vehicle is disarmed. Exiting loop.")  
+    #     break
+
     # Calculate Tracking Errors
     north_error = target_north - drone_north
     east_error = target_east - drone_east
@@ -181,10 +193,6 @@ while True:
         target_lat,
         target_lon,
         target_alt,
-        target_relative_alt,
-        target_vx,
-        target_vy,
-        target_vz,
 
         # Relative
         distance,
@@ -202,11 +210,12 @@ while True:
 
     # Save immediately
     log_file.flush()
-        
+    
     time.sleep(dt)
  
- # Close log file
+# Close log file
 log_file.close()
+
 print(f"\nFlight log saved successfully as: {filename}")
 
 # Plot Trajectories
