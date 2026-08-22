@@ -2,6 +2,8 @@ from gps_simulation.drone_mavlink import DroneMavlink
 import time
 import math
 import matplotlib.pyplot as plt
+import csv
+from datetime import datetime
 
 print("connecting....")
 connection = DroneMavlink(connection_string="udp:127.0.0.1:14550")
