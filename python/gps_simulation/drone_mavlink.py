@@ -13,7 +13,8 @@ class DroneMavlink(MAVLinkInterface):
     def __init__(self, connection_string="udp:127.0.0.1:14550"):
 
         super().__init__(connection_string, vehicle_type="copter")
-        # self.mav_conn.target_system = 1
+        self.mav_conn.target_system = 1
+        self.mav_conn.target_component = 1
         # # self.mav_conn.target_component = mavutil.mavlink.MAV_TYPE_QUADROTOR
         # self.mav_conn.target_component = mavlink2.MAV_TYPE_QUADROTOR
 
@@ -130,7 +131,8 @@ class DroneMavlink(MAVLinkInterface):
 
         if hb is None:
             return True   # No new heartbeat yet
-
+        print(f"bool {hb.base_mode &
+                    mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED}")
         return bool(
             hb.base_mode &
             mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED

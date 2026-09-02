@@ -6,8 +6,7 @@ import csv
 from datetime import datetime
 
 print("connecting....")
-drone_connection = mavutil.mavlink_connection("/dev/ttyUSB0",baud=57600)
-target_connection = mavutil.mavlink_connection("/dev/ttyUSB1",baud=57600)
+drone_connection = DroneMavlink(connection_string="udp:127.0.0.1:14550")
 
 # Drone GPS Position
 if drone_connection:
@@ -29,18 +28,21 @@ print(f"drone_Lat: {drone_home_lat}, drone_lon: {drone_home_lon}, drone_Alt: {dr
 time.sleep(2)
 
 # Target GPS Position
-if target_connection:
-    target_gps = drone_connection.get_gps_position()
-    target_lat = target_gps["lat"]
-    target_lon = target_gps["lon"]
-    target_alt = target_gps["alt"]
-    target_relative_alt = target_gps["relative_alt"]
-    target_Vx = target_gps["vx"] + 0.707
-    target_Vy = target_gps["vy"] + 0.707
-    target_Vz = target_gps["vz"]
+# Set initial target position
+offset_north = 0      # meters
+offset_east  = 0     # meters
+offset_distance = math.sqrt(offset_north**2 + offset_east**2)   # shouldn't be more than 100 meters
+print("Target offset distance = %.2f m" % offset_distance)
 
-else:
-    print("No target GPS data received.")
+# Target location
+target_lat = drone_home_lat + offset_north / 111111.0
+target_lon = drone_home_lon + offset_east / (111111.0 * math.cos(math.radians(drone_home_lat)))
+target_alt = drone_home_alt 
+target_relative_alt = drone_home_relative_alt
+target_Vx = drone_home_Vx + 0.707     # North (m/s)
+target_Vy = drone_home_Vy + 0.707     # East (m/s)
+target_Vz = drone_home_Vz
+dt = 0.1    # time step in seconds
 
 print(f"target_Lat: {target_lat}, target_lon: {target_lon}, target_Alt: {target_alt}, target_Relative Alt: {target_relative_alt}, target_Vx: {target_Vx}, target_Vy: {target_Vy}, target_Vz: {target_Vz}")
 
@@ -95,10 +97,11 @@ writer.writerow([
 
 print(f"Logging flight data to: {filename}")
 
+time.sleep(30)
 
-while True:
+while drone_connection.is_armed():
         
-   
+
     # distance travelled in this time step
     north = target_Vx * dt
     east  = target_Vy * dt
@@ -182,9 +185,9 @@ while True:
         target_lon,
         target_alt,
         target_relative_alt,
-        target_vx,
-        target_vy,
-        target_vz,
+        target_Vx,
+        target_Vy,
+        target_Vz,
 
         # Relative
         distance,

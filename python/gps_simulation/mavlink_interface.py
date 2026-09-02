@@ -3,7 +3,7 @@
 MAVLink interface for communicating with ArduPilot SITL simulation.
 """
 import time
-
+    
 from numpy import int32
 from pymavlink import mavutil
 import pymavlink.dialects.v20.all as dialect
@@ -49,6 +49,7 @@ class MAVLinkInterface:
             self.connected = True
             print("Heartbeat received!")
             print("Target system and component IDs:")
+            print(self.mav_conn)
             print(self.mav_conn.target_system, self.mav_conn.target_component)
             print(f"Connected to {self.vehicle_type}")
 
