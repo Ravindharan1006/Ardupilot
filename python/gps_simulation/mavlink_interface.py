@@ -323,6 +323,30 @@ class MAVLinkInterface:
 
         return True
 
+
+    def get_mode(self):
+        """Return the current Ardupilot flight mode name."""
+
+        hb = self.mav_conn.recv_match(
+            type="HEARTBEAT",
+            blocking=False
+        )
+
+        if hb is None:
+            return None
+
+        mode_mapping = self.mav_conn.mode_mapping()
+
+        if mode_mapping is None:
+            return None
+
+        for mode_name, mode_id in mode_mapping.items():
+            if mode_id == hb.custome_mode:
+                return mode_name
+
+        return
+        
+
     def set_mode(self, mode):
 
         if isinstance(mode, int):

@@ -230,10 +230,6 @@ void AP_Follow::set_offset(Vector3f offset, int8_t offset_type)
     _offset_m.set(offset);
 }
 
-Vector3f AP_Follow::get_offset() const
-{
-    return _offset_m.get();
-}
 // // restore offsets to zero if necessary, should be called when vehicle exits follow mode
 // void AP_Follow::clear_offsets_if_required()
 
@@ -467,6 +463,10 @@ bool AP_Follow::get_ofs_pos_vel_accel_NED_m(Vector3p &pos_ofs_ned_m, Vector3f &v
 // Retrieves distance vectors (with and without configured offsets) and the target’s velocity, all in the NED frame.
 bool AP_Follow::get_target_dist_and_vel_NED_m(Vector3f &dist_ned, Vector3f &dist_with_offs, Vector3f &vel_ned)
 {
+
+    GCS_SEND_TEXT(MAV_SEVERITY_WARNING,
+            "Has Target Info=%d ",
+            (int)_estimate_valid);
     WITH_SEMAPHORE(_follow_sem);
     
     if (!_estimate_valid) {

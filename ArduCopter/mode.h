@@ -101,7 +101,7 @@ public:
         AUTOROTATE =   26,  // Autonomous autorotation
         AUTO_RTL =     27,  // Auto RTL, this is not a true mode, AUTO will report as this mode if entered to perform a DO_LAND_START Landing sequence
         TURTLE =       28,  // Flip over after crash
-        TARLAND =      29, 
+        TARLAND =      29,
 
         // Mode number 30 reserved for "offboard" for external/lua control.
 
@@ -2086,6 +2086,10 @@ private:
     bool landed = false;
     bool land_initialized = false;
     bool has_target_info = false;
+
+    void log_tarland_diagnostics();
+    uint32_t last_diag_ms = 0;
+    
     struct yaw_behaviour {
         float yaw_cd;
         bool use_yaw;
@@ -2094,8 +2098,9 @@ private:
 
 
     void get_target_info();
-    void follow_target();
+    void follow_target(bool soft_landing = false);    
     void perform_landing();
+    void soft_land_target();
 
     yaw_behaviour get_yaw_behaviour();
     void get_desired_vel_neu_cms(Vector3f &desired_vel_neu_cms, Vector3f pos_err_off_neu, Vector3f pos_err, Vector3f pos_err_off);

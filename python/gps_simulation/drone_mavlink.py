@@ -17,6 +17,9 @@ class DroneMavlink(MAVLinkInterface):
         self.mav_conn.target_component = 1
         # # self.mav_conn.target_component = mavutil.mavlink.MAV_TYPE_QUADROTOR
         # self.mav_conn.target_component = mavlink2.MAV_TYPE_QUADROTOR
+        
+        # Latest TARLAND diagnostic data received from ArduPilot
+        self._latest_tarland_diagnostics = {}
 
     def takeoff(self, target_altitude, wait_for_altitude=True):
         """
@@ -131,9 +134,11 @@ class DroneMavlink(MAVLinkInterface):
 
         if hb is None:
             return True   # No new heartbeat yet
-        print(f"bool {hb.base_mode &
-                    mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED}")
+        print(f"bool {hb.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED}")
         return bool(
             hb.base_mode &
             mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED
         )
+
+    def get_latest_tarland_diagnostics(self) -> dict:
+        return self._latest_tarland_diagnostics.copy()

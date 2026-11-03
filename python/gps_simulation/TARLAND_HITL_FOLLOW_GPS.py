@@ -82,6 +82,53 @@ drone_east_log = []
 target_north_log = []
 target_east_log  = []
 
+# ============================
+# Create Flight Log File
+# ============================
+
+filename = datetime.now().strftime("Drone_Target_Flight_Log_%Y%m%d_%H%M%S.csv")
+
+log_file = open(filename, mode="w", newline="")
+writer = csv.writer(log_file)
+
+writer.writerow([
+    "Time",
+
+    # Drone Data
+    "Drone_Latitude",
+    "Drone_Longitude",
+    "Drone_Altitude(m)",
+    "Drone_Relative_Altitude(m)",
+    "Drone_Vx(m/s)",
+    "Drone_Vy(m/s)",
+    "Drone_Vz(m/s)",
+
+    # Target Data
+    "Target_Latitude",
+    "Target_Longitude",
+    "Target_Altitude(m)",
+
+    # Relative Information
+    "Distance_to_Target(m)",
+
+    # NED Coordinates
+    "Drone_North(m)",
+    "Drone_East(m)",
+    "Target_North(m)",
+    "Target_East(m)",
+
+    # Errors
+    "North_Error(m)",
+    "East_Error(m)"
+])
+
+print(f"Logging flight data to: {filename}")
+
+
+# Set drone to follow a moving target
+print(f"Drone ready to switch to mode TARLAND")
+connection.set_mode('TARLAND')
+
 while True:
 
     # distance travelled in this time step
@@ -143,9 +190,56 @@ while True:
     if not connection.is_armed():
         print("Vehicle is disarmed. Exiting loop.")  
         break
+
+
+    # Calculate Tracking Errors
+    north_error = target_north - drone_north
+    east_error = target_east - drone_east
+
+    # Log data into CSV
+    writer.writerow([
+        datetime.now().strftime("%H:%M:%S.%f"),
+
+        # Drone
+        drone_lat,
+        drone_lon,
+        drone_alt,
+        drone_relative_alt,
+        drone_vx,
+        drone_vy,
+        drone_vz,
+
+        # Target
+        target_lat,
+        target_lon,
+        target_alt,
+
+        # Relative
+        distance,
+
+        # NED
+        drone_north,
+        drone_east,
+        target_north,
+        target_east,
+
+        # Errors
+        north_error,
+        east_error
+    ])
+
+    # Save immediately
+    log_file.flush()
+
     
     time.sleep(dt)
  
+
+# Close log file
+log_file.close()
+
+print(f"\nFlight log saved successfully as: {filename}")
+
 
 # Plot Trajectories
 
